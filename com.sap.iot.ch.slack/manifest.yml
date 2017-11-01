@@ -1,0 +1,10 @@
+applications:
+- name: slack
+  memory: 512M
+  instances: 1
+  host: eu1.hana.ondemand.com
+  path: target/slack.war
+  services:
+    - hana
+env:
+    SPRING_PROFILES_DEFAULT: cloud

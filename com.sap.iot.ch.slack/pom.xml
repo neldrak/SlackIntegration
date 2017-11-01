@@ -1,0 +1,203 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>com.sap.iot.ch</groupId>
+	<artifactId>com.sap.iot.ch.slack</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<packaging>war</packaging>
+	<name>slack</name>
+	<description>Slack Integration</description>
+
+	<organization>
+		<name>SAP (Switzerland) AG</name>
+		<url>http://www.sap.com</url>
+	</organization>
+
+	<developers>
+		<developer>
+			<name>Daniel Huser</name>
+			<url>http://hcp.sap.com</url>
+			<organization>SAP (Switzerland) AG</organization>
+			<organizationUrl>http://www.sap.com/</organizationUrl>
+		</developer>
+	</developers>
+
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>1.4.4.RELEASE</version>
+		<relativePath /> <!-- lookup parent from repository -->
+	</parent>
+
+	<properties>
+		<java.version>1.8</java.version>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+		<org.springframework.boot-version>1.4.4.RELEASE</org.springframework.boot-version>
+		<org.springframework.test-version>4.3.6.RELEASE</org.springframework.test-version>
+		<org.apache.derby-version>10.13.1.1</org.apache.derby-version>
+		<slf4j.api-version>1.7.22</slf4j.api-version>
+		<swagger-version>2.6.1</swagger-version>
+		<jackson-version>2.8.6</jackson-version>
+		<junit-version>4.12</junit-version>
+		<org.eclipse.paho.client.mqttv3-version>1.1.0</org.eclipse.paho.client.mqttv3-version>
+	</properties>
+
+	<build>
+		<finalName>slack</finalName>
+
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<source>${java.version}</source>
+					<target>${java.version}</target>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+				<version>${org.springframework.boot-version}</version>
+				<configuration>
+					<profiles>
+						<profile>dev</profile>
+						<profile>cloud</profile>
+					</profiles>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+
+	<profiles>
+		<!--Local development profile -->
+		<profile>
+			<id>dev</id>
+			<activation>
+				<activeByDefault>false</activeByDefault>
+			</activation>
+			<dependencies>
+				<!--Embedded tomcat etc. -->
+				<dependency>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-starter-web</artifactId>
+					<version>${org.springframework.boot-version}</version>
+				</dependency>
+				<!--Embedded database -->
+				<dependency>
+					<groupId>org.apache.derby</groupId>
+					<artifactId>derby</artifactId>
+					<version>${org.apache.derby-version}</version>
+				</dependency>
+			</dependencies>
+		</profile>
+
+		<!--SAP HCP profile -->
+		<!--Activate with -Dspring.profiles.active=cloud -->
+		<profile>
+			<id>cloud</id>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+			<dependencies>
+				<dependency>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-starter-web</artifactId>
+					<version>${org.springframework.boot-version}</version>
+					<exclusions>
+						<!--These two are *both* necessary to prevent different inclusion of 
+							the embedded tomcat. -->
+						<exclusion>
+							<groupId>org.springframework.boot</groupId>
+							<artifactId>spring-boot-starter-tomcat</artifactId>
+						</exclusion>
+						<exclusion>
+							<groupId>org.apache.tomcat.embed</groupId>
+							<artifactId>tomcat-embed-el</artifactId>
+						</exclusion>
+						<exclusion>
+							<artifactId>logback-classic</artifactId>
+							<groupId>ch.qos.logback</groupId>
+						</exclusion>
+					</exclusions>
+				</dependency>
+				<dependency>
+					<groupId>javax.servlet</groupId>
+					<artifactId>javax.servlet-api</artifactId>
+					<scope>provided</scope>
+				</dependency>
+			</dependencies>
+		</profile>
+	</profiles>
+
+	<dependencies>
+		<!-- HCP NEO SDK -->
+		<dependency>
+			<groupId>com.sap.hcp.neo</groupId>
+			<artifactId>com.sap.hcp.neo.api</artifactId>
+			<version>1.0</version>
+			<scope>system</scope>
+			<systemPath>${project.basedir}/libs/neo-sdk-core-api-2.67.13.1.jar</systemPath>
+		</dependency>
+
+		<!--Logging provided by Tomcat. -->
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<version>${slf4j.api-version}</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-simple</artifactId>
+			<version>${slf4j.api-version}</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<!-- JPA -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-jpa</artifactId>
+			<version>${org.springframework.boot-version}</version>
+			<exclusions>
+				<exclusion>
+					<artifactId>logback-classic</artifactId>
+					<groupId>ch.qos.logback</groupId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+
+
+		<!-- REST Documentation -->
+		<dependency>
+			<groupId>io.springfox</groupId>
+			<artifactId>springfox-swagger2</artifactId>
+			<version>${swagger-version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>io.springfox</groupId>
+			<artifactId>springfox-swagger-ui</artifactId>
+			<version>${swagger-version}</version>
+		</dependency>
+
+		<!-- Commons -->
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+			<version>3.1</version>
+		</dependency>
+
+		<!-- HTTP -->
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpclient</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>com.google.code.gson</groupId>
+			<artifactId>gson</artifactId>
+		</dependency>
+	</dependencies>
+</project>
