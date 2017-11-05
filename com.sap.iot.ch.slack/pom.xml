@@ -137,7 +137,7 @@
 			<artifactId>com.sap.hcp.neo.api</artifactId>
 			<version>1.0</version>
 			<scope>system</scope>
-			<systemPath>${project.basedir}/libs/neo-sdk-core-api-2.67.13.1.jar</systemPath>
+			<systemPath>${project.basedir}/libs/neo-sdk-core-api-2.86.16.jar</systemPath>
 		</dependency>
 
 		<!--Logging provided by Tomcat. -->
@@ -166,6 +166,17 @@
 					<groupId>ch.qos.logback</groupId>
 				</exclusion>
 			</exclusions>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-websocket</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.jsoup</groupId>
+			<artifactId>jsoup</artifactId>
+			<version>1.11.1</version>
 		</dependency>
 
 
