@@ -59,8 +59,7 @@ public class FABIController {
 		attachments[0].setFallback("Unkown command");
 		attachments[0].setTitle("FABI");
 		attachments[0].setTitleLink("https://fiorilaunchpad.sap.com/sites#fabi-Display");
-		attachments[0].setText(
-				"Please use /fabi *office* | *home* | *customer*\nTo set another day than today use *yesterday* | *tomorrow*");
+		attachments[0].setText("Please use /fabi *office* | *home* | *customer*\nTo set another day than today use *yesterday* | *tomorrow*");
 		attachments[0].setPretext("Unkown command");
 		attachments[0].setColor("warning");
 		attachments[0].setCallbackId("fabiCallback");
@@ -130,12 +129,12 @@ public class FABIController {
 			attachments = new Attachment[1];
 			attachments[0] = new Attachment();
 			attachments[0].setTitle("FABI");
+			attachments[0].setText("");
 			attachments[0].setTitleLink("https://fiorilaunchpad.sap.com/sites#fabi-Display");
 			attachments[0].setFallback("Update successful");
 			attachments[0].setPretext("Update successful");
 			mrkdwn = new ArrayList<String>();
 			mrkdwn.add("title");
-			mrkdwn.add("text");
 			mrkdwn.add("pretext");
 			mrkdwn.add("fields");
 			attachments[0].setMarkdownIn(mrkdwn);
@@ -150,13 +149,13 @@ public class FABIController {
 				fields.add(new Field("Date", dateText, true));
 				fields.add(new Field("Type", typeText, true));
 
-				date.plusDays(1);
+				date = date.plusDays(1);
 			}
 
 			attachments[0].setFields(fields.toArray(new Field[0]));
 			attachments[0].setCallbackId("fabiCallback");
 			attachments[0].addAction(new Action("dismiss", "Dimiss", "button"));
-
+			richMessage.setAttachments(attachments);
 			return richMessage;
 		}
 		return defaultResponse.encodedMessage();
