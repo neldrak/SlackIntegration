@@ -222,8 +222,8 @@ public class TrainController {
 									inputDateFormatter);
 							String depDateText = dateFormatter.format(dateDep);
 							fieldFrom.setTitle(depDateText);
-							fieldFrom.setValue(connection.getFrom().getStation().getName() + " | Platform *"
-									+ connection.getFrom().getPlatform() + "*" + "\n"
+							fieldFrom.setValue(connection.getFrom().getStation().getName() + "\n" + 
+							" Platform *"+ connection.getFrom().getPlatform() + "*" + "\n"
 									+ formatDuration(connection.getDuration()) + "\n"
 									+ connection.getProductString());
 							fieldFrom.setShortEnough(true);
@@ -233,9 +233,8 @@ public class TrainController {
 									inputDateFormatter);
 							String arrDateText = dateFormatter.format(dateArr);
 							fieldTo.setTitle(arrDateText);
-							fieldTo.setValue(connection.getTo().getStation().getName() + " | Platform *"
-									+ connection.getTo().getPlatform() + "*" + "\n" + connection.getTransfers()
-									+ " transfers");
+							fieldTo.setValue(connection.getTo().getStation().getName() + "\n" + connection.getTransfers()
+									+ " transfers"  + "\n :train2: " + connection.getProductString());
 							fieldTo.setShortEnough(true);
 							fields.add(fieldTo);
 						}

@@ -77,6 +77,6 @@ public class Connection {
 			return "";
 		return products.stream()
 		        .map( n -> n.toString() )
-		        .collect( Collectors.joining( "," ) );
+		        .collect( Collectors.joining( ", " ) );
 	}
 }
