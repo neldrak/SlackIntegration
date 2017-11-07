@@ -61,6 +61,8 @@ public class To {
 
 	@JsonProperty("platform")
 	public String getPlatform() {
+		if(platform==null)
+			return "n/a";
 		return platform;
 	}
 
