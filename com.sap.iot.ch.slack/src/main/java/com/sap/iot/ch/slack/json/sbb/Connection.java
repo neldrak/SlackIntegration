@@ -1,5 +1,8 @@
 package com.sap.iot.ch.slack.json.sbb;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class Connection {
@@ -15,6 +18,9 @@ public class Connection {
 
 	@JsonProperty("transfers")
 	private int transfers;
+	
+	@JsonProperty("products")
+	private List<String> products;
 
 	@JsonProperty("from")
 	public From getFrom() {
@@ -56,4 +62,21 @@ public class Connection {
 		this.transfers = transfers;
 	}
 
+	@JsonProperty("products")
+	public List<String> getProducts() {
+		return products;
+	}
+
+	@JsonProperty("products")
+	public void setProducts(List<String> products) {
+		this.products = products;
+	}
+	
+	public String getProductString(){
+		if(products==null || products.size() == 0)
+			return "";
+		return products.stream()
+		        .map( n -> n.toString() )
+		        .collect( Collectors.joining( "," ) );
+	}
 }

@@ -110,6 +110,10 @@ public class FABIController {
 					date = LocalDate.now().with(DayOfWeek.MONDAY);
 					numberOfConsDays = 5;
 					break;
+				case "month":
+					date = LocalDate.now().withDayOfMonth(1);
+					numberOfConsDays = 5;
+					break;
 				case "yesterday":
 					date = LocalDate.now().minusDays(1);
 					break;

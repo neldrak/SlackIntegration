@@ -224,7 +224,8 @@ public class TrainController {
 							fieldFrom.setTitle(depDateText);
 							fieldFrom.setValue(connection.getFrom().getStation().getName() + " | Platform *"
 									+ connection.getFrom().getPlatform() + "*" + "\n"
-									+ formatDuration(connection.getDuration()));
+									+ formatDuration(connection.getDuration()) + "\n"
+									+ connection.getProductString());
 							fieldFrom.setShortEnough(true);
 							fields.add(fieldFrom);
 							Field fieldTo = new Field();

@@ -36,13 +36,6 @@ public class SlackBot extends Bot {
 
 	private static final Logger LOG = LoggerFactory.getLogger(SlackBot.class);
 
-	/**
-	 * The Url you get while configuring a new incoming webhook on Slack. You
-	 * can setup a new incoming webhook
-	 * <a href="https://my.slack.com/services/new/incoming-webhook/">here</a>.
-	 */
-	@Value("${slackIncomingWebhookUrl}")
-	private String slackIncomingWebhookUrl;
 
 	/**
 	 * Slack token from application.properties file. You can get your slack
