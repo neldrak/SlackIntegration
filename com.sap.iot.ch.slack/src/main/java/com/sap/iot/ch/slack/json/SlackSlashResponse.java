@@ -3,11 +3,13 @@ package com.sap.iot.ch.slack.json;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.sap.iot.ch.slack.jBot.models.Attachment;
+
 public class SlackSlashResponse {
 
 	private final String text;
 	private final String response_type;
-	private final List<SlackAttachment> attachments = new ArrayList<>();
+	private final List<Attachment> attachments = new ArrayList<>();
 	
 	public SlackSlashResponse(String text) {
 		super();
@@ -15,7 +17,7 @@ public class SlackSlashResponse {
 		this.text = text;
 	}
 	
-	public void addAttachment(SlackAttachment attachment){
+	public void addAttachment(Attachment attachment){
 		attachments.add(attachment);
 	}
 	
@@ -27,7 +29,7 @@ public class SlackSlashResponse {
 		return response_type;
 	}
 
-	public List<SlackAttachment> getAttachments() {
+	public List<Attachment> getAttachments() {
 		return attachments;
 	}
 }

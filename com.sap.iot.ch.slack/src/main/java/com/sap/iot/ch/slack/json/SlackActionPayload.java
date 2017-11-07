@@ -1,14 +1,23 @@
 package com.sap.iot.ch.slack.json;
 
+import java.util.List;
+
+import com.sap.iot.ch.slack.jBot.models.Action;
+import com.sap.iot.ch.slack.jBot.models.Channel;
+import com.sap.iot.ch.slack.jBot.models.Team;
+import com.sap.iot.ch.slack.jBot.models.User;
+
 public class SlackActionPayload {
 
 	private String callback_id;
-	private String token;
-	private SlackChannel channel;
-	private SlackUser user;
-	private SlackTeam team;
+
+	private List<Action> actions;
+	private Channel channel;
+	private User user;
+	private Team team;
 	private String action_ts;
 	private String message_ts;
+	private String token;
 	private String attachment_id;
 	private boolean is_app_unfurl;
 	private String type;
@@ -18,7 +27,7 @@ public class SlackActionPayload {
 	public SlackActionPayload() {
 		super();
 	}
-	public SlackActionPayload(String callback_id, String token, SlackChannel channel, SlackUser user, SlackTeam team,
+	public SlackActionPayload(String callback_id, String token, Channel channel, User user, Team team,
 			String action_ts, String message_ts, String attachment_id, boolean is_app_unfurl, String type,
 			String response_url, String trigger_id) {
 		super();
@@ -35,6 +44,14 @@ public class SlackActionPayload {
 		this.response_url = response_url;
 		this.trigger_id = trigger_id;
 	}
+	
+	public List<Action> getActions() {
+		return actions;
+	}
+	public void setActions(List<Action> actions) {
+		this.actions = actions;
+	}
+	
 	public String getCallback_id() {
 		return callback_id;
 	}
@@ -47,22 +64,22 @@ public class SlackActionPayload {
 	public void setToken(String token) {
 		this.token = token;
 	}
-	public SlackChannel getChannel() {
+	public Channel getChannel() {
 		return channel;
 	}
-	public void setChannel(SlackChannel channel) {
+	public void setChannel(Channel channel) {
 		this.channel = channel;
 	}
-	public SlackUser getUser() {
+	public User getUser() {
 		return user;
 	}
-	public void setUser(SlackUser user) {
+	public void setUser(User user) {
 		this.user = user;
 	}
-	public SlackTeam getTeam() {
+	public Team getTeam() {
 		return team;
 	}
-	public void setTeam(SlackTeam team) {
+	public void setTeam(Team team) {
 		this.team = team;
 	}
 	public String getAction_ts() {

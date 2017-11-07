@@ -1,6 +1,7 @@
 package com.sap.iot.ch.slack.api;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -63,8 +64,19 @@ public class MealController {
 		}
 		try {
 			String url = "http://www.meal-and-more.ch";
-			if(text.contains("next")){
+			if (text.contains("next")) {
 				url = "http://www.meal-and-more.ch/home?page=1";
+			}
+
+			boolean week = false;
+			int dayOfWeek = 0;
+			if (text.contains("week")) {
+				week = true;
+			} else {
+				dayOfWeek = LocalDate.now().getDayOfWeek().getValue() - 1;
+				if (text.contains("tomorrow")) {
+					dayOfWeek++;
+				}
 			}
 
 			/** build response */
@@ -73,46 +85,87 @@ public class MealController {
 			// set attachments
 			Attachment[] attachments = new Attachment[1];
 			attachments[0] = new Attachment();
-			attachments[0].setTitle("Meal & More");
+			attachments[0].setTitle(":knife_fork_plate: Meal & More");
 			attachments[0].setTitleLink(url);
 			List<String> mrkdwn = new ArrayList<String>();
+			mrkdwn.add("pretext");
 			mrkdwn.add("fields");
 			attachments[0].setMarkdownIn(mrkdwn);
-			Field[] fields = new Field[15];
+			int count = 15;
+			if (!week)
+				count = 3;
+			Field[] fields = new Field[count];
 
 			Document doc = Jsoup.connect(url).get();
 			Elements e1 = doc.select("#wochenmenu");
 			Elements dates = e1.select(".date-display-single");
+			if(dates.isEmpty()){
+				RichMessage richMessage2 = new RichMessage("Lunch Menu not available yet");
+				richMessage2.setResponseType("ephemeral");
+				return richMessage2.encodedMessage();
+			}
+			if (week) {
+				attachments[0].setPretext("_" + dates.get(0).text().substring(0, dates.get(0).text().length() - 6)
+						+ " - " + dates.get(4).text() + "_");
+			}
 			Elements menus = e1.select("p");
 			Elements menuClean = new Elements();
-			for(Element menu : menus){
-				if(menu.hasText() && !menu.text().equals("&nbsp;"))
-					menuClean.add(menu);
+			Element textP = null;
+			for (Element menu : menus) {
+				if (menu.hasText()) {
+					if (menu.text().contains("MEAL") || menu.text().contains("CHF")) {
+						if (textP != null)
+							menuClean.add(textP);
+						textP = null;
+						menuClean.add(menu);
+					} else if (menu.text().length() > 8) {
+						if (textP == null) {
+							textP = menu;
+						} else {
+							textP.text(textP.text() + " " + menu.text());
+						}
+					}
+				}
 			}
-			int p = 0;
-			int i = 0;
-			for (Element date : dates) {
-				fields[i] = new Field();
-				fields[i].setTitle(":knife_fork_plate: " + date.text());
-				fields[i].setShortEnough(false);
-				i++;
-				fields[i] = new Field();
-				fields[i].setTitle(menuClean.get(p).text());
-				fields[i].setShortEnough(true);
-				p++;
-				fields[i].setValue(menuClean.get(p).text() + "\n*" + menuClean.get(p+1).text() + "*");
-				p++;
-				p++;
-				i++;
-				
-				fields[i] = new Field();
-				fields[i].setTitle(menuClean.get(p).text());
-				fields[i].setShortEnough(true);
-				p++;
-				fields[i].setValue(menuClean.get(p).text() + "\n*" + menuClean.get(p+1).text() + "*");
-				p++;
-				p++;
-				i++;
+			if (textP != null)
+				menuClean.add(textP);
+
+			if (week) {
+				int p = 0;
+				int i = 0;
+				for (Element date : dates) {
+					fields[i] = new Field();
+					fields[i].setTitle(":small_blue_diamond: " + date.text() + " :small_blue_diamond:");
+					fields[i].setShortEnough(false);
+					i++;
+					fields[i] = new Field();
+					fields[i].setTitle(menuClean.get(p).text());
+					fields[i].setShortEnough(true);
+					p++;
+					fields[i].setValue(menuClean.get(p).text() + "\n _" + menuClean.get((p + 1)).text() + "_");
+					p = p + 2;
+					i++;
+					fields[i] = new Field();
+					fields[i].setTitle(menuClean.get(p).text());
+					fields[i].setShortEnough(true);
+					p++;
+					fields[i].setValue(menuClean.get(p).text() + "\n _" + menuClean.get((p + 1)).text() + "_");
+					p = p + 2;
+					i++;
+				}
+			} else {
+				int p = dayOfWeek * 3;
+				fields[0] = new Field();
+				fields[0].setTitle(":small_blue_diamond: " + dates.get(dayOfWeek).text() + " :small_blue_diamond:");
+				fields[0].setShortEnough(false);
+				fields[1] = new Field();
+				fields[1].setTitle(menuClean.get(p).text());
+				fields[1].setShortEnough(true);
+				fields[1].setValue(menuClean.get(p+1).text() + "\n _" + menuClean.get((p + 2)).text() + "_");
+				fields[2] = new Field();
+				fields[2].setTitle(menuClean.get(p+3).text());
+				fields[2].setShortEnough(true);
+				fields[2].setValue(menuClean.get(p+4).text() + "\n _" + menuClean.get((p + 5)).text() + "_");
 			}
 
 			attachments[0].setFields(fields);

@@ -4,10 +4,13 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -19,51 +22,62 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.google.gson.Gson; 
+import com.google.gson.Gson;
 import com.sap.iot.ch.slack.SlackUtil;
-import com.sap.iot.ch.slack.json.SlackAction;
+import com.sap.iot.ch.slack.jBot.models.Action;
+import com.sap.iot.ch.slack.jBot.models.Attachment;
+import com.sap.iot.ch.slack.jBot.models.Field;
+import com.sap.iot.ch.slack.jBot.models.RichMessage;
 import com.sap.iot.ch.slack.json.SlackActionPayload;
 import com.sap.iot.ch.slack.json.SlackActionResponse;
-import com.sap.iot.ch.slack.json.SlackAttachment;
-import com.sap.iot.ch.slack.json.SlackSlashResponse;
 
 @RestController
 @RequestMapping("/api/fabi")
 public class FABIController {
 	private static final Logger LOG = LoggerFactory.getLogger(FABIController.class);
 
-	private final static String SLACK_FABI_TOKEN = "YoWkVkKMcRlEkPipUiK4BUNz";
+	@Value("${slachCommandTokenFabi}")
+	private String slackToken;
 
 	@RequestMapping(value = "/slash-command", method = RequestMethod.POST, consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-	public ResponseEntity<SlackSlashResponse> onReceiveSlashCommand(@RequestParam("token") String token,
+	public RichMessage onReceiveSlashCommand(@RequestParam("token") String token,
 			@RequestParam("team_id") String teamId, @RequestParam("team_domain") String teamDomain,
 			@RequestParam("channel_id") String channelId, @RequestParam("channel_name") String channelName,
 			@RequestParam("user_id") String userId, @RequestParam("user_name") String userName,
 			@RequestParam("command") String command, @RequestParam("text") String text,
 			@RequestParam("response_url") String responseUrl) {
 		// validate token
-		if (!token.equals(SLACK_FABI_TOKEN)) {
-			return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+		if (!token.equals(slackToken)) {
+			return new RichMessage("Sorry! You're not lucky enough to use our slack command.");
 		}
 
-		SlackSlashResponse defaultResponse = new SlackSlashResponse("");
-		SlackAttachment attachment = new SlackAttachment("", "Unkown command",
-				"Please use /fabi *office* | *home* | *customer*\nTo set another day than today use *yesterday* | *tomorrow*",
-				"Unkown command");
-		attachment.addMarkdownIn("pretext");
-		attachment.addMarkdownIn("text");
-		attachment.addMarkdownIn("title");
-		attachment.addMarkdownIn("fields");
-		attachment.setColor("warning");
-		attachment.setCallbackId("fabiCallback");
-		attachment.addAction("dismiss", "dismiss", "Dismiss", "button");
+		RichMessage defaultResponse = new RichMessage("");
+		defaultResponse.setResponseType("ephemeral");
+		// set attachments
+		Attachment[] attachments = new Attachment[1];
+		attachments[0] = new Attachment();
+		attachments[0].setFallback("Unkown command");
+		attachments[0].setTitle("FABI");
+		attachments[0].setTitleLink("https://fiorilaunchpad.sap.com/sites#fabi-Display");
+		attachments[0].setText(
+				"Please use /fabi *office* | *home* | *customer*\nTo set another day than today use *yesterday* | *tomorrow*");
+		attachments[0].setPretext("Unkown command");
+		attachments[0].setColor("warning");
+		attachments[0].setCallbackId("fabiCallback");
+		attachments[0].addAction(new Action("dismiss", "Dimiss", "button"));
 
-		defaultResponse.addAttachment(attachment);
+		List<String> mrkdwn = new ArrayList<String>();
+		mrkdwn.add("title");
+		mrkdwn.add("text");
+		mrkdwn.add("pretext");
+		mrkdwn.add("fields");
+		attachments[0].setMarkdownIn(mrkdwn);
+		defaultResponse.setAttachments(attachments);
 
 		switch (command) {
 		case "/fabi":
 			if (text == null || text.isEmpty()) {
-				return new ResponseEntity<SlackSlashResponse>(defaultResponse, HttpStatus.OK);
+				return defaultResponse.encodedMessage();
 			}
 
 			LocalDate date = null;
@@ -87,7 +101,7 @@ public class FABIController {
 				fabiType = SlackUtil.FABI_TYPE.customer;
 				break;
 			default:
-				return new ResponseEntity<SlackSlashResponse>(defaultResponse, HttpStatus.OK);
+				return defaultResponse.encodedMessage();
 			}
 
 			if (scanner.hasNext()) {
@@ -111,35 +125,46 @@ public class FABIController {
 			}
 
 			String typeText = fabiType.toString();
+
+			RichMessage richMessage = new RichMessage("");
+			attachments = new Attachment[1];
+			attachments[0] = new Attachment();
+			attachments[0].setTitle("FABI");
+			attachments[0].setTitleLink("https://fiorilaunchpad.sap.com/sites#fabi-Display");
+			attachments[0].setFallback("Update successful");
+			attachments[0].setPretext("Update successful");
+			mrkdwn = new ArrayList<String>();
+			mrkdwn.add("title");
+			mrkdwn.add("text");
+			mrkdwn.add("pretext");
+			mrkdwn.add("fields");
+			attachments[0].setMarkdownIn(mrkdwn);
+			attachments[0].setColor("good");
+			List<Field> fields = new ArrayList<Field>();
 			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-			String dateText = "<!date^" + date.atStartOfDay().toEpochSecond(ZoneOffset.UTC) + "^{date_short}|"
-					+ formatter.format(date) + ">";
-			SlackSlashResponse response = new SlackSlashResponse("");
-			SlackAttachment attachmentResponse = new SlackAttachment("FABI", "Update successful", "",
-					"Update successful");
-			attachmentResponse.addMarkdownIn("pretext");
-			attachmentResponse.addMarkdownIn("text");
-			attachmentResponse.addMarkdownIn("title");
-			attachmentResponse.addMarkdownIn("fields");
-			attachmentResponse.setTitleLink("https://fiorilaunchpad.sap.com/sites#fabi-Display");
-			attachmentResponse.setColor("good");
-			attachmentResponse.addField("Date", dateText, true);
-			attachmentResponse.addField("Type", typeText, true);
-			attachmentResponse.setCallbackId("fabiCallback");
-			attachmentResponse.addAction("dismiss", "dismiss", "Dismiss", SlackAction.TYPE_BUTTON);
+			for (int i = 0; i < numberOfConsDays; i++) {
 
-			response.addAttachment(attachmentResponse);
+				String dateText = "<!date^" + date.atStartOfDay().toEpochSecond(ZoneOffset.UTC) + "^{date_short}|"
+						+ formatter.format(date) + ">";
 
-			return new ResponseEntity<SlackSlashResponse>(response, HttpStatus.OK);
+				fields.add(new Field("Date", dateText, true));
+				fields.add(new Field("Type", typeText, true));
+
+				date.plusDays(1);
+			}
+
+			attachments[0].setFields(fields.toArray(new Field[0]));
+			attachments[0].setCallbackId("fabiCallback");
+			attachments[0].addAction(new Action("dismiss", "Dimiss", "button"));
+
+			return richMessage;
 		}
-
-		return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-
+		return defaultResponse.encodedMessage();
 	}
 
 	@RequestMapping(value = "/action", method = RequestMethod.POST)
 	public ResponseEntity<SlackActionResponse> action(@RequestParam("payload") String payload) {
-		
+
 		SlackActionPayload payloadObject = new Gson().fromJson(payload, SlackActionPayload.class);
 		LOG.debug(payloadObject.getResponse_url());
 
@@ -159,7 +184,7 @@ public class FABIController {
 	@ResponseBody
 	public static ResponseEntity<?> handleConnectionErrorResponse(Exception exception) {
 		LOG.error(exception.getMessage());
-	    return new ResponseEntity<String>(HttpStatus.OK);
+		return new ResponseEntity<String>(HttpStatus.OK);
 	}
 
 }

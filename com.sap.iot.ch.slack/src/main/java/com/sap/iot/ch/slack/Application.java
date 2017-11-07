@@ -12,7 +12,7 @@ import org.springframework.web.filter.CommonsRequestLoggingFilter;
  *
  * @author Daniel Huser
  */
-@SpringBootApplication(scanBasePackages = {"com.sap.iot.ch.slack.jBot", "com.sap.iot.ch.slack.api"})
+@SpringBootApplication(scanBasePackages = {"com.sap.iot.ch.slack.jBot", "com.sap.iot.ch.slack.api", "com.sap.iot.ch.slack.dao", "com.sap.iot.ch.slack.model"})
 public class Application extends SpringBootServletInitializer {
 
 	@Override

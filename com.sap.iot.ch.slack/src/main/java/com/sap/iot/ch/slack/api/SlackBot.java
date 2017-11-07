@@ -1,8 +1,8 @@
 package com.sap.iot.ch.slack.api;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.regex.Matcher;
+
+import javax.annotation.PreDestroy;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,13 +10,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.socket.WebSocketSession;
 
-import com.sap.iot.ch.slack.HeaderRequestInterceptor;
 import com.sap.iot.ch.slack.jBot.Bot;
 import com.sap.iot.ch.slack.jBot.Controller;
 import com.sap.iot.ch.slack.jBot.EventType;
@@ -226,13 +224,13 @@ public class SlackBot extends Bot {
 
 		attachments[0].setFields(fields);
 		botMessage.setAttachments(attachments);
-		
+
 		botMessage.setToken(slackToken);
 		LOG.debug("Channel: " + event.getChannelId());
 		botMessage.setChannel(event.getChannelId());
 		botMessage.setUser(event.getUserId());
 		botMessage.setAs_user(false);
-		
+
 		try {
 			HttpHeaders requestHeaders = new HttpHeaders();
 			requestHeaders.add("Content-Type", MediaType.APPLICATION_JSON_VALUE);
@@ -242,5 +240,17 @@ public class SlackBot extends Bot {
 		} catch (RestClientException e) {
 			LOG.error("Error posting to Slack Incoming Webhook: ", e);
 		}
+	}
+
+	@PreDestroy
+	public void destroy() {
+		if (manager == null)
+			return;
+		if (manager.isRunning())
+			try {
+				manager.stopInternal();
+			} catch (Exception e) {
+
+			}
 	}
 }

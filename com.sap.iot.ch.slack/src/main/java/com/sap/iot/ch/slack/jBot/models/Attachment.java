@@ -1,9 +1,10 @@
 package com.sap.iot.ch.slack.jBot.models;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
-import java.util.List;
 
 /**
  * Created by ramswaroop on 12/06/2016.
@@ -32,6 +33,9 @@ public class Attachment {
     @JsonProperty("footer_icon")
     private String footerIcon;
     private String ts;
+    @JsonProperty("callback_id")
+    private String callbackId;
+    private List<Action> actions = new ArrayList<Action>();
 
     @JsonProperty("mrkdwn_in")
     private List<String> markdownIn;
@@ -163,5 +167,25 @@ public class Attachment {
     public void setMarkdownIn(List<String> markdownIn) {
         this.markdownIn = markdownIn;
     }
+
+	public String getCallbackId() {
+		return callbackId;
+	}
+
+	public void setCallbackId(String callbackId) {
+		this.callbackId = callbackId;
+	}  
+	
+	public List<Action> getActions(){
+		return actions;
+	}
+
+	public void addAction(Action action){
+		this.actions.add(action);
+	}
+
+	public void setActions(List<Action> actions) {
+		this.actions = actions;
+	}
 }
 

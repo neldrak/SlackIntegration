@@ -1,14 +1,13 @@
-package com.sap.iot.ch.slack.json;
+package com.sap.iot.ch.slack.jBot.models;
 
-public class SlackTeam {
-
+public class Team {
 	private String id;
 	private String domain;
 
-	public SlackTeam() {
+	public Team() {
 	}
 
-	public SlackTeam(String id, String domain) {
+	public Team(String id, String domain) {
 		super();
 		this.id = id;
 		this.domain = domain;
