@@ -2,6 +2,7 @@ package com.sap.iot.ch.slack.api;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -73,8 +74,11 @@ public class MealController {
 			if (text.contains("week")) {
 				week = true;
 			} else {
-				dayOfWeek = LocalDate.now().getDayOfWeek().getValue() - 1;
+				dayOfWeek = LocalDateTime.now().getDayOfWeek().getValue() - 1;
 				if (text.contains("tomorrow")) {
+					dayOfWeek++;
+				} else if(LocalDateTime.now().getHour() >= 14) {
+					// Check if it is after 14:00 -> show next day
 					dayOfWeek++;
 				}
 			}
