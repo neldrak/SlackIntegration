@@ -67,7 +67,7 @@ public class SlackBot extends Bot {
 	@Controller(events = { EventType.DIRECT_MENTION, EventType.DIRECT_MESSAGE })
 	public void onReceiveDM(WebSocketSession session, Event event) {
 		LOG.debug("Message: " + event.getText());
-		if (event.getUserId() != null && !event.getUserId().equals("Concur"))
+		if (event.getUserId() != null && !event.getUserId().equals("Concur") +  event.getText() != null && !event.getText().isEmpty())
 			reply(session, event, new Message("Hi! I'm here to help you with your travel and expense management!"));
 	}
 

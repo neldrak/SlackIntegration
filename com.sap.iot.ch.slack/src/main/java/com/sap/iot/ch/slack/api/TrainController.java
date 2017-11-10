@@ -95,77 +95,70 @@ public class TrainController {
 			// 2017-11-07T10:00:00+0100
 			DateTimeFormatter inputDateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssXX");
 			inputDateFormatter.withResolverStyle(ResolverStyle.SMART);
-			
-			if(text==null)
+
+			if (text == null)
 				text = "";
 			StringTokenizer stringTokens = new StringTokenizer(text);
 
 			// Set Home Station
 			if (stringTokens != null && !text.isEmpty()) {
-				if (stringTokens.countTokens() == 1 && stringTokens.nextToken().equals(":home:")) {
-					// Return Select Home Response
-					RichMessage richMessage = new RichMessage("Set Home Station");
-					richMessage.setResponseType("ephemeral");
-					// set attachments
-					Attachment[] attachments = new Attachment[1];
-					attachments[0] = new Attachment();
-					attachments[0].setCallbackId("setHome");
-					attachments[0]
-							.addAction(new Action("station", "Select Station near Home", "select", "external", 3));
-					richMessage.setAttachments(attachments);
-					return richMessage.encodedMessage();
-				}
-
-				// Set Office Station
-				stringTokens = new StringTokenizer(text);
-				if (stringTokens.countTokens() == 1 && stringTokens.nextToken().equals(":office:")) {
-					// Return Select Home Response
-					RichMessage richMessage = new RichMessage("Set Office Station");
-					richMessage.setResponseType("ephemeral");
-					// set attachments
-					Attachment[] attachments = new Attachment[1];
-					attachments[0] = new Attachment();
-					attachments[0].setCallbackId("setOffice");
-					attachments[0]
-							.addAction(new Action("station", "Select Station near Office", "select", "external", 3));
-					richMessage.setAttachments(attachments);
-					return richMessage.encodedMessage();
-				}
-
-				// Station Schedule
-				stringTokens = new StringTokenizer(text);
-				String firstToken = stringTokens.nextToken();
-				if (!stringTokens.hasMoreTokens() && (firstToken.equals("home") || firstToken.equals("office"))) {
-
-					String stationId = "8503526"; // Default Regensdorf
-
-					if (text.contains("home") && slackUser.getHomeStation() != 0) {
-						LOG.error("Home found: " + slackUser.getHomeStation());
-						stationId = "" + slackUser.getHomeStation();
+				switch (stringTokens.countTokens()) {
+				case 1:
+					String singleToken = stringTokens.nextToken();
+					if (singleToken.equals(":home:")) {
+						// Return Select Home Response
+						RichMessage richMessage = new RichMessage("Set Home Station");
+						richMessage.setResponseType("ephemeral");
+						// set attachments
+						Attachment[] attachments = new Attachment[1];
+						attachments[0] = new Attachment();
+						attachments[0].setCallbackId("setHome");
+						attachments[0]
+								.addAction(new Action("station", "Select Station near Home", "select", "external", 3));
+						richMessage.setAttachments(attachments);
+						return richMessage.encodedMessage();
 					}
-					if (text.contains("office") && slackUser.getOfficeStation() != 0) {
-						stationId = "" + slackUser.getOfficeStation();
-						LOG.error("Office found: " + slackUser.getOfficeStation());
+
+					// Set Office Station
+					if (singleToken.equals(":office:")) {
+						// Return Select Home Response
+						RichMessage richMessage = new RichMessage("Set Office Station");
+						richMessage.setResponseType("ephemeral");
+						// set attachments
+						Attachment[] attachments = new Attachment[1];
+						attachments[0] = new Attachment();
+						attachments[0].setCallbackId("setOffice");
+						attachments[0].addAction(
+								new Action("station", "Select Station near Office", "select", "external", 3));
+						richMessage.setAttachments(attachments);
+						return richMessage.encodedMessage();
 					}
+
+					// Station Schedule
+
+					// Single Word
+
+					int stationId = resolveStation(singleToken, slackUser);
 
 					// Call API
-					URI targetUrl = UriComponentsBuilder.fromUriString(BASE_URL).path("/v1/stationboard")
+					URI stationTableUrl = UriComponentsBuilder.fromUriString(BASE_URL).path("/v1/stationboard")
 							.queryParam("id", stationId).queryParam("limit", "5").build().encode().toUri();
-					RestTemplate restTemplate = new RestTemplate();
-					StationTable stationTable = restTemplate.getForObject(targetUrl, StationTable.class);
+					RestTemplate stationTableRestTemplate = new RestTemplate();
+					StationTable stationTable = stationTableRestTemplate.getForObject(stationTableUrl,
+							StationTable.class);
 
-					RichMessage richMessage = new RichMessage("Train Schedule");
-					richMessage.setResponseType("ephemeral");
+					RichMessage stationTableMessage = new RichMessage("Train Schedule");
+					stationTableMessage.setResponseType("ephemeral");
 					// set attachments
-					Attachment[] attachments = new Attachment[1];
-					attachments[0] = new Attachment();
-					attachments[0].setTitle(":station:");
-					attachments[0].setTitleLink("https://www.sbb.ch/de/fahrplan.html");
-					List<String> mrkdwn = new ArrayList<String>();
-					mrkdwn.add("pretext");
-					mrkdwn.add("fields");
-					attachments[0].setMarkdownIn(mrkdwn);
-					List<Field> fields = new ArrayList<Field>();
+					Attachment[] stationTableAttachments = new Attachment[1];
+					stationTableAttachments[0] = new Attachment();
+					stationTableAttachments[0].setTitle(":station:");
+					stationTableAttachments[0].setTitleLink("https://www.sbb.ch/de/fahrplan.html");
+					List<String> stationTableMrkdwn = new ArrayList<String>();
+					stationTableMrkdwn.add("pretext");
+					stationTableMrkdwn.add("fields");
+					stationTableAttachments[0].setMarkdownIn(stationTableMrkdwn);
+					List<Field> stationTableFields = new ArrayList<Field>();
 
 					for (Stationboard stationboard : stationTable.getStationboard()) {
 						if (stationboard.getCategory().equals("BUS")) {
@@ -179,26 +172,23 @@ public class TrainController {
 						field.setValue(stationboard.getTo() + " | _" + stationboard.getName() + "_" + " | Platform *"
 								+ stationboard.getStop().getPlatform() + "*");
 						field.setShortEnough(false);
-						fields.add(field);
+						stationTableFields.add(field);
 					}
 
-					attachments[0].setFields(fields.toArray(new Field[0]));
-					richMessage.setAttachments(attachments);
-					return richMessage.encodedMessage();
-				}
-
+					stationTableAttachments[0].setFields(stationTableFields.toArray(new Field[0]));
+					stationTableMessage.setAttachments(stationTableAttachments);
+					return stationTableMessage.encodedMessage();
 				// Connection
-				stringTokens = new StringTokenizer(text);
-				if (stringTokens.countTokens() == 2) {
+				case 2:
 					try {
 						int stationFrom = resolveStation(stringTokens.nextToken(), slackUser);
 						int stationTo = resolveStation(stringTokens.nextToken(), slackUser);
 
 						// Read Connections
-						URI targetUrl = UriComponentsBuilder.fromUriString(BASE_URL).path("/v1/connections")
+						URI connectionUrl = UriComponentsBuilder.fromUriString(BASE_URL).path("/v1/connections")
 								.queryParam("from", stationFrom).queryParam("to", stationTo).build().encode().toUri();
-						RestTemplate restTemplate = new RestTemplate();
-						Connections connections = restTemplate.getForObject(targetUrl, Connections.class);
+						RestTemplate connectionRestTemplate = new RestTemplate();
+						Connections connections = connectionRestTemplate.getForObject(connectionUrl, Connections.class);
 						if (connections.getConnections().isEmpty()) {
 							return new RichMessage("No Connections available");
 						}
@@ -210,10 +200,10 @@ public class TrainController {
 						attachments[0] = new Attachment();
 						attachments[0].setTitle("");
 						attachments[0].setTitleLink("https://www.sbb.ch/de/fahrplan.html");
-						List<String> mrkdwn = new ArrayList<String>();
-						mrkdwn.add("pretext");
-						mrkdwn.add("fields");
-						attachments[0].setMarkdownIn(mrkdwn);
+						List<String> connMrkdwn = new ArrayList<String>();
+						connMrkdwn.add("pretext");
+						connMrkdwn.add("fields");
+						attachments[0].setMarkdownIn(connMrkdwn);
 						List<Field> fields = new ArrayList<Field>();
 						for (Connection connection : connections.getConnections()) {
 
@@ -222,8 +212,8 @@ public class TrainController {
 									inputDateFormatter);
 							String depDateText = dateFormatter.format(dateDep);
 							fieldFrom.setTitle(depDateText);
-							fieldFrom.setValue(connection.getFrom().getStation().getName() + "\n" + 
-							" Platform *"+ connection.getFrom().getPlatform() + "*" + "\n"
+							fieldFrom.setValue(connection.getFrom().getStation().getName() + "\n" + " Platform *"
+									+ connection.getFrom().getPlatform() + "*" + "\n"
 									+ formatDuration(connection.getDuration()));
 							fieldFrom.setShortEnough(true);
 							fields.add(fieldFrom);
@@ -232,8 +222,9 @@ public class TrainController {
 									inputDateFormatter);
 							String arrDateText = dateFormatter.format(dateArr);
 							fieldTo.setTitle(arrDateText);
-							fieldTo.setValue(connection.getTo().getStation().getName() + "\n" + connection.getTransfers()
-									+ " transfers"  + "\n :train2: " + connection.getProductString());
+							fieldTo.setValue(
+									connection.getTo().getStation().getName() + "\n" + connection.getTransfers()
+											+ " transfers" + "\n :train2: " + connection.getProductString());
 							fieldTo.setShortEnough(true);
 							fields.add(fieldTo);
 						}
@@ -256,10 +247,9 @@ public class TrainController {
 			attachments[0] = new Attachment();
 			attachments[0].setTitle("How to use /train");
 			attachments[0].setPretext(":tram: by SAP CH");
-			attachments[0].setText(
-					"`/train [station]`\nGet Station Schedule e.g. _/train Bern_\n" + 
-					"`/train [from] [to]`\nGet Connection e.g. _/train Genf Bern_\n" + 
-					"`/train :home:|:office:`\nSet Office/Home Station\nThose can be used later as station e.g. _/train home_");
+			attachments[0].setText("`/train [station]`\nGet Station Schedule e.g. _/train Bern_\n"
+					+ "`/train [from] [to]`\nGet Connection e.g. _/train Genf Bern_\n"
+					+ "`/train :home:|:office:`\nSet Office/Home Station\nThose can be used later as station e.g. _/train home_");
 			List<String> mrkdwn = new ArrayList<String>();
 			mrkdwn.add("text");
 			attachments[0].setMarkdownIn(mrkdwn);
@@ -340,7 +330,7 @@ public class TrainController {
 					.queryParam("query", stationText).queryParam("type", "station").build().encode().toUri();
 			RestTemplate restTemplate = new RestTemplate();
 			Stations stations = restTemplate.getForObject(targetUrl, Stations.class);
-			if (!stations.getStations().isEmpty())
+			if (stations != null && !stations.getStations().isEmpty())
 				return Integer.parseInt(stations.getStations().get(0).getId());
 		}
 		throw new Exception("Can't find Station `" + stationText + "`");

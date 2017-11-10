@@ -36,7 +36,7 @@ import com.sap.iot.ch.slack.json.SlackActionResponse;
 public class FABIController {
 	private static final Logger LOG = LoggerFactory.getLogger(FABIController.class);
 
-	@Value("${slachCommandTokenFabi}")
+	@Value("${slashCommandTokenFabi}")
 	private String slackToken;
 
 	@RequestMapping(value = "/slash-command", method = RequestMethod.POST, consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
@@ -59,7 +59,8 @@ public class FABIController {
 		attachments[0].setFallback("Unkown command");
 		attachments[0].setTitle("FABI");
 		attachments[0].setTitleLink("https://fiorilaunchpad.sap.com/sites#fabi-Display");
-		attachments[0].setText("Please use /fabi *office* | *home* | *customer*\nTo set another day than today use *yesterday* | *tomorrow*");
+		attachments[0].setText(
+				"Please use /fabi *office* | *home* | *customer*\nTo set another day than today use *yesterday* | *tomorrow*");
 		attachments[0].setPretext("Unkown command");
 		attachments[0].setColor("warning");
 		attachments[0].setCallbackId("fabiCallback");
@@ -112,7 +113,7 @@ public class FABIController {
 					break;
 				case "month":
 					date = LocalDate.now().withDayOfMonth(1);
-					numberOfConsDays = 5;
+					numberOfConsDays = date.getMonth().length(date.isLeapYear());
 					break;
 				case "yesterday":
 					date = LocalDate.now().minusDays(1);
@@ -146,13 +147,14 @@ public class FABIController {
 			List<Field> fields = new ArrayList<Field>();
 			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 			for (int i = 0; i < numberOfConsDays; i++) {
+				if (!(date.getDayOfWeek() == DayOfWeek.SATURDAY || date.getDayOfWeek() == DayOfWeek.SUNDAY)) {
 
-				String dateText = "<!date^" + date.atStartOfDay().toEpochSecond(ZoneOffset.UTC) + "^{date_short}|"
-						+ formatter.format(date) + ">";
+					String dateText = "<!date^" + date.atStartOfDay().toEpochSecond(ZoneOffset.UTC) + "^{date_short}|"
+							+ formatter.format(date) + ">";
 
-				fields.add(new Field("Date", dateText, true));
-				fields.add(new Field("Type", typeText, true));
-
+					fields.add(new Field("Date", dateText, true));
+					fields.add(new Field("Type", typeText, true));
+				}
 				date = date.plusDays(1);
 			}
 
